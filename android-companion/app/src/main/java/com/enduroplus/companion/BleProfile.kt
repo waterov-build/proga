@@ -42,6 +42,21 @@ data class CheckpointEntry(
 )
 
 /**
+ * A checkpoint in a course definition, including the par time for scoring.
+ *
+ * @param name    Human-readable label (e.g. "CP1-Start")
+ * @param lat     Latitude in degrees WGS-84
+ * @param lon     Longitude in degrees WGS-84
+ * @param parSec  Par time for this segment in seconds (used for watch scoring)
+ */
+data class CourseCheckpoint(
+    val name: String,
+    val lat: Double,
+    val lon: Double,
+    val parSec: Int,
+)
+
+/**
  * Parses the text payload produced by EnduroPlusModel.serializeResults().
  * Format: "score=NNN;cp1=name,elapsed,score;cp2=…"
  */
@@ -65,10 +80,11 @@ fun parseResults(deviceName: String, payload: String): ParticipantResult {
 }
 
 /**
- * Formats a checkpoint list to the format expected by the watch.
- * Format (one line per checkpoint): "name,lat,lon\n…"
+ * Encodes a list of [CourseCheckpoint] to the format expected by the watch.
+ * Format (one line per checkpoint): "name,lat,lon,parSec\n…"
+ * The parSec field enables the watch to use real per-segment par times.
  */
-fun encodeCheckpointList(checkpoints: List<Triple<String, Double, Double>>): String =
-    checkpoints.joinToString("\n") { (name, lat, lon) ->
-        "$name,%.6f,%.6f".format(lat, lon)
+fun encodeCheckpointList(checkpoints: List<CourseCheckpoint>): String =
+    checkpoints.joinToString("\n") { cp ->
+        "${cp.name},%.6f,%.6f,${cp.parSec}".format(cp.lat, cp.lon)
     }

@@ -89,6 +89,18 @@ timeBonus = clamp(parSec / elapsedSec, 0.5, 2.0) × 100 − 100
 | CP_LIST  | `12340003-…` | Write         | Checkpoint list from companion |
 | STATUS   | `12340004-…` | Read / Notify | Live status string |
 
+#### `CP_LIST` payload format
+One checkpoint per line: `name,latitude,longitude,parSec`  
+Example:
+```
+CP1-Start,55.751244,37.618423,120
+CP2-Rock,55.752100,37.619800,150
+CP5-Finish,55.756000,37.624000,200
+```
+The `parSec` field carries the expected (par) time for that segment in seconds and
+is used by the watch scoring formula.  It is optional for backwards compatibility;
+if omitted the watch defaults to 120 s.
+
 ---
 
 ## Android companion app
@@ -99,7 +111,10 @@ Minimum SDK: **26 (Android 8.0)**  Target SDK: **34**
 - Scans for nearby ENDURO PLUS watches filtered by service UUID.
 - Auto-connects and subscribes to SCORE and STATUS notifications.
 - Live leaderboard sorted by total score.
-- Push checkpoint lists to all connected watches via BLE write.
+- **Course editor** — define checkpoints (name, lat/lon, par time in seconds),
+  save courses to internal storage, and push the active course to all connected
+  watches with one tap.  Par times are included in the `CP_LIST` BLE payload so
+  the watch uses real segment times instead of the default placeholder.
 
 ### Build
 ```bash
@@ -115,6 +130,5 @@ cd android-companion
 
 ## TODO / next steps
 - Replace hardcoded checkpoint coordinates with a FIT course file loader.
-- Replace `60s × index` par times with real segment data per course.
 - Add map view to the companion (render track polylines per participant).
 - Add FIT file export from companion to share full session data.

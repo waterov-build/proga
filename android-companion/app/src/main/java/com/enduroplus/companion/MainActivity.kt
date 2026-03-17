@@ -2,6 +2,7 @@ package com.enduroplus.companion
 
 import android.Manifest
 import android.bluetooth.BluetoothDevice
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -25,7 +26,8 @@ import com.enduroplus.companion.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
 
 /**
- * Main screen — shows a live leaderboard of participants and a scan button.
+ * Main screen — shows a live leaderboard of participants, a scan button,
+ * and a shortcut to the Course Editor.
  *
  * Layout: activity_main.xml
  * Architecture: ViewModel (ResultsViewModel) + BleManager + StateFlow → RecyclerView
@@ -34,8 +36,12 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: ResultsViewModel by viewModels()
-    private lateinit var bleManager: BleManager
     private val adapter = LeaderboardAdapter()
+
+    // Shared BleManager lives in the Application so CourseEditorActivity can reuse it.
+    private val bleManager: BleManager
+        get() = EnduroPlusApplication.instance?.bleManager
+            ?: error("EnduroPlusApplication not initialised — check AndroidManifest.xml")
 
     // ---- Permission handling ----
 
@@ -73,7 +79,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        bleManager = BleManager(applicationContext)
         viewModel.bleManager = bleManager
 
         binding.leaderboardRecycler.layoutManager = LinearLayoutManager(this)
@@ -81,6 +86,9 @@ class MainActivity : AppCompatActivity() {
 
         binding.scanButton.setOnClickListener { checkAndScan() }
         binding.refreshButton.setOnClickListener { viewModel.refreshScores() }
+        binding.manageCourseButton.setOnClickListener {
+            startActivity(Intent(this, CourseEditorActivity::class.java))
+        }
 
         // Observe leaderboard updates
         lifecycleScope.launch {
@@ -107,11 +115,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewModel.startCollecting()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        bleManager.stopScan()
     }
 
     // ---- BLE scanning ----

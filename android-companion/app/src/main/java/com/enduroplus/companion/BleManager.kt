@@ -169,10 +169,10 @@ class BleManager(private val context: Context) {
 
     /**
      * Write a checkpoint list to the watch.
-     * [checkpoints] — list of Triple(name, lat, lon)
+     * [checkpoints] — list of [CourseCheckpoint] with name, coordinates and par time.
      */
     fun sendCheckpoints(device: BluetoothDevice,
-                        checkpoints: List<Triple<String, Double, Double>>) {
+                        checkpoints: List<CourseCheckpoint>) {
         val gatt = _gatts[device.address] ?: return
         val char = gatt.getService(UUID.fromString(BleProfile.SERVICE_UUID))
             ?.getCharacteristic(UUID.fromString(BleProfile.CHAR_CP_LIST)) ?: return
@@ -186,6 +186,17 @@ class BleManager(private val context: Context) {
             @Suppress("DEPRECATION")
             gatt.writeCharacteristic(char)
         }
+    }
+
+    /**
+     * Broadcast a checkpoint list to every currently connected watch.
+     */
+    fun sendCheckpointsAll(checkpoints: List<CourseCheckpoint>) {
+        _gatts.keys.toList().forEach { address ->
+            val device = _gatts[address]?.device ?: return@forEach
+            sendCheckpoints(device, checkpoints)
+        }
+        Log.d(TAG, "Sent course (${checkpoints.size} checkpoints) to ${_gatts.size} watch(es)")
     }
 
     // ---------- Helpers ----------

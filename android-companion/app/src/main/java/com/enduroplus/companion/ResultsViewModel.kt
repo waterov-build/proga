@@ -40,13 +40,9 @@ class ResultsViewModel : ViewModel() {
     }
 
     /** Send a checkpoint list to all currently connected watches. */
-    fun pushCheckpoints(checkpoints: List<Triple<String, Double, Double>>) {
+    fun pushCheckpoints(checkpoints: List<CourseCheckpoint>) {
         val mgr = bleManager ?: return
-        viewModelScope.launch {
-            mgr.devicesFlow.value.forEach { device ->
-                mgr.sendCheckpoints(device, checkpoints)
-            }
-        }
+        mgr.sendCheckpointsAll(checkpoints)
     }
 
     /** Request an immediate score read from all connected watches. */

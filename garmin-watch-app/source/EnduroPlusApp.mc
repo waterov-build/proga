@@ -48,18 +48,21 @@ const BLE_CHAR_STATUS_UUID   = "12340004-1234-1234-1234-123456789abc";
 
 // Represents a single GPS checkpoint on the route.
 // Fields:
-//   lat  - latitude  (degrees, WGS-84)
-//   lon  - longitude (degrees, WGS-84)
-//   name - human-readable label shown on the watch UI
+//   lat    - latitude  (degrees, WGS-84)
+//   lon    - longitude (degrees, WGS-84)
+//   name   - human-readable label shown on the watch UI
+//   parSec - par time for this checkpoint segment (seconds); used for scoring
 class Checkpoint {
     var lat;
     var lon;
     var name;
+    var parSec;
 
-    function initialize(lat, lon, name) {
-        self.lat = lat;
-        self.lon = lon;
-        self.name = name;
+    function initialize(lat, lon, name, parSec) {
+        self.lat    = lat;
+        self.lon    = lon;
+        self.name   = name;
+        self.parSec = parSec;
     }
 }
 
@@ -286,14 +289,16 @@ class EnduroPlusModel {
 
     // Demo checkpoint list — replace with course-specific data loaded
     // from FIT course files or pushed via BLE from the companion app.
+    // Par times (parSec) are set to rough estimates for demonstration;
+    // the companion app will override them with real segment data.
     function initialize() {
         _trackRecorder = new TrackRecorder();
         _checkpoints = [
-            new Checkpoint(55.751244, 37.618423, "CP1-Start"),
-            new Checkpoint(55.752100, 37.619800, "CP2-Rock"),
-            new Checkpoint(55.753500, 37.621200, "CP3-Hill"),
-            new Checkpoint(55.754800, 37.622500, "CP4-River"),
-            new Checkpoint(55.756000, 37.624000, "CP5-Finish"),
+            new Checkpoint(55.751244, 37.618423, "CP1-Start",  120),
+            new Checkpoint(55.752100, 37.619800, "CP2-Rock",   150),
+            new Checkpoint(55.753500, 37.621200, "CP3-Hill",   180),
+            new Checkpoint(55.754800, 37.622500, "CP4-River",  160),
+            new Checkpoint(55.756000, 37.624000, "CP5-Finish", 200),
         ];
     }
 
@@ -389,17 +394,14 @@ class EnduroPlusModel {
     function _reachCheckpoint(cp) {
         var now = Time.now();
         var elapsed = (now.value() - _startMoment.value()).toFloat();
-        // Par time placeholder: 60 s × checkpoint index.
-        // TODO: replace with course-specific par times loaded from the
-        // companion app or a FIT course file so scoring reflects real
-        // terrain difficulty and checkpoint distances.
-        var parSec = 60 * (_nextCpIdx + 1);
+        // Use the per-checkpoint par time set by the companion or the default.
+        var parSec = cp.parSec > 0 ? cp.parSec : 120;
         var bonus = calcTimeBonus(parSec, elapsed);
         var score = BASE_CHECKPOINT_SCORE + bonus;
         if (score < 0) { score = 0; }
         _totalScore += score;
         _results.add(new CheckpointResult(cp, elapsed.toNumber(), score));
-        Sys.println("Reached: " + cp.name + "  elapsed=" + elapsed + "s  score=" + score);
+        Sys.println("Reached: " + cp.name + "  elapsed=" + elapsed + "s  par=" + parSec + "s  score=" + score);
         _nextCpIdx++;
     }
 
@@ -444,8 +446,10 @@ class EnduroPlusModel {
     }
 
     // Parses a checkpoint list pushed from the companion app over BLE.
-    // Expected format (one checkpoint per line): "name,lat,lon"
-    // Example: "CP1-Start,55.751244,37.618423\nCP2-Rock,55.752100,37.619800"
+    // Expected format (one checkpoint per line): "name,lat,lon,parSec"
+    // The parSec field (par time in seconds) is optional for backwards
+    // compatibility; if omitted, a default of 120 s is used.
+    // Example: "CP1-Start,55.751244,37.618423,120\nCP2-Rock,55.752100,37.619800,150"
     function loadCheckpointsFromString(text) {
         if (text == null || text.length() == 0) {
             return;
@@ -455,11 +459,13 @@ class EnduroPlusModel {
         for (var i = 0; i < lines.size(); i++) {
             var parts = lines[i].trim().split(",");
             if (parts.size() >= 3) {
-                var name = parts[0].trim();
-                var lat  = parts[1].trim().toFloat();
-                var lon  = parts[2].trim().toFloat();
+                var name   = parts[0].trim();
+                var lat    = parts[1].trim().toFloat();
+                var lon    = parts[2].trim().toFloat();
+                var parSec = parts.size() >= 4 ? parts[3].trim().toNumber() : 120;
+                if (parSec == null || parSec <= 0) { parSec = 120; }
                 if (name.length() > 0 && lat >= -90.0 && lat <= 90.0 && lon >= -180.0 && lon <= 180.0) {
-                    newList.add(new Checkpoint(lat, lon, name));
+                    newList.add(new Checkpoint(lat, lon, name, parSec));
                 }
             }
         }
