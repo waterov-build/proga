@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<strings>
+  <string id="AppName">Enduro</string>
+  <string id="Ready">Ready</string>
+  <string id="Recording">Recording...</string>
+  <string id="Syncing">Syncing...</string>
+  <string id="Done">Done!</string>
+  <string id="NoSegments">No Segments</string>
+  <string id="SegmentStart">Segment Start</string>
+  <string id="SegmentEnd">Segment End</string>
+  <string id="BestTime">Best Time</string>
+  <string id="YourTime">Your Time</string>
+  <string id="Rank">Rank</string>
+</strings>

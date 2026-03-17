@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+.env
+
+# Android
+*.class
+*.dex
+*.ap_
+*.apk
+*.aab
+local.properties
+.gradle/
+build/
+.idea/
+*.iml
+
+# Garmin/Connect IQ
+*.prg
+*.iq
+.bin/
+
+# Docker / secrets
+.env
+docker-compose.override.yml

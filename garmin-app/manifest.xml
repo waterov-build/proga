@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="3">
+  <iq:application entry="EnduroApp" id="a3b2c1d0-e4f5-6789-abcd-ef0123456789"
+                  launcherIcon="@Drawables.LauncherIcon" minSdkVersion="3.0.0"
+                  targetSdkVersion="4.2.4" type="watchapp">
+    <iq:products>
+      <iq:product id="fenix6"/>
+      <iq:product id="fenix7"/>
+      <iq:product id="enduro"/>
+      <iq:product id="enduro2"/>
+      <iq:product id="edge1030"/>
+    </iq:products>
+    <iq:permissions>
+      <iq:uses-permission id="Communications"/>
+      <iq:uses-permission id="Fit"/>
+      <iq:uses-permission id="SensorHistory"/>
+    </iq:permissions>
+    <iq:languages>
+      <iq:language>eng</iq:language>
+    </iq:languages>
+  </iq:application>
+</iq:manifest>
