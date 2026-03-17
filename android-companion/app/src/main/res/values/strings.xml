@@ -4,7 +4,13 @@
     <string name="scan">🔍 Scan for Watches</string>
     <string name="scanning">Scanning…</string>
     <string name="refresh">↻ Refresh</string>
+    <string name="export_fit">📤 Export FIT</string>
     <string name="leaderboard">Leaderboard</string>
     <string name="no_devices">Watches found: 0</string>
+    <string name="watches_found">Watches found: %d</string>
     <string name="no_results_yet">No results yet.\nScan for watches and start a race!</string>
+    <string name="no_data_to_export">No race data to export yet.</string>
+    <string name="export_failed">Export failed: no data available for selected participant.</string>
+    <string name="export_saved">FIT file saved: %s</string>
+    <string name="export_error">Export error: %s</string>
 </resources>

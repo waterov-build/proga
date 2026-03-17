@@ -41,6 +41,10 @@ class BleManager(private val context: Context) {
     private val _resultsFlow = MutableStateFlow<Map<String, ParticipantResult>>(emptyMap())
     val resultsFlow: StateFlow<Map<String, ParticipantResult>> = _resultsFlow
 
+    // Latest GPS track per device address — list of (lat, lon) polyline points
+    private val _tracksFlow = MutableStateFlow<Map<String, List<Pair<Double, Double>>>>(emptyMap())
+    val tracksFlow: StateFlow<Map<String, List<Pair<Double, Double>>>> = _tracksFlow
+
     // Active GATT connections keyed by device address
     private val _gatts = mutableMapOf<String, BluetoothGatt>()
 
@@ -221,7 +225,11 @@ class BleManager(private val context: Context) {
                 Log.d(TAG, "Status from ${device.address}: $text")
             }
             UUID.fromString(BleProfile.CHAR_TRACK) -> {
-                Log.d(TAG, "Track from ${device.address}: ${text.length} chars")
+                val track = parseTrack(text)
+                val updated = _tracksFlow.value.toMutableMap()
+                updated[device.address] = track
+                _tracksFlow.value = updated
+                Log.d(TAG, "Track from ${device.address}: ${track.size} points")
             }
         }
     }

@@ -17,7 +17,7 @@
         android:textColor="@color/enduro_orange"
         android:paddingBottom="8dp" />
 
-    <!-- Scan / Refresh controls -->
+    <!-- Scan / Refresh / Export controls -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -39,6 +39,14 @@
             android:layout_weight="1"
             android:layout_marginStart="8dp"
             android:text="@string/refresh" />
+
+        <Button
+            android:id="@+id/exportFitButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="@string/export_fit" />
     </LinearLayout>
 
     <!-- Device count indicator -->
@@ -51,6 +59,13 @@
         android:textColor="@android:color/darker_gray"
         android:paddingBottom="8dp" />
 
+    <!-- GPS track map -->
+    <com.enduroplus.companion.TrackMapView
+        android:id="@+id/trackMapView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2" />
+
     <!-- Leaderboard header -->
     <TextView
         android:layout_width="match_parent"
@@ -58,6 +73,7 @@
         android:text="@string/leaderboard"
         android:textSize="16sp"
         android:textStyle="bold"
+        android:paddingTop="8dp"
         android:paddingBottom="4dp" />
 
     <!-- Empty state -->

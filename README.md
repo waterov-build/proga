@@ -100,6 +100,8 @@ Minimum SDK: **26 (Android 8.0)**  Target SDK: **34**
 - Auto-connects and subscribes to SCORE and STATUS notifications.
 - Live leaderboard sorted by total score.
 - Push checkpoint lists to all connected watches via BLE write.
+- GPS track map view showing each participant's route polyline.
+- Export race session as a FIT file saved to device storage.
 
 ### Build
 ```bash
@@ -113,8 +115,25 @@ cd android-companion
 
 ---
 
-## TODO / next steps
-- Replace hardcoded checkpoint coordinates with a FIT course file loader.
-- Replace `60s × index` par times with real segment data per course.
-- Add map view to the companion (render track polylines per participant).
-- Add FIT file export from companion to share full session data.
+## Completed improvements
+
+- **FIT course file loader** (`garmin-watch-app/source/CourseLoader.mc`):
+  `CourseLoader` reads waypoints from FIT courses stored on the device via
+  `Activity.getCourses()` and converts them to `Checkpoint` objects.  Falls
+  back to the built-in demo route when no course is loaded.
+
+- **Distance-based par times**: `CourseLoader.calculateParTimes()` derives
+  per-segment par times from the Haversine distance between consecutive
+  checkpoints divided by `ENDURO_AVG_SPEED_KMH` (15 km/h).  Par times are
+  also recalculated when a checkpoint list is pushed over BLE.
+
+- **GPS track map** (`android-companion/.../TrackMapView.kt`): custom
+  `View` that renders each participant's GPS polyline in a distinct colour on
+  a scaled Mercator projection.  White dots mark start positions; coloured
+  dots mark the latest recorded positions.
+
+- **FIT file export** (`android-companion/.../FitExporter.kt`): serialises a
+  race session (track points, checkpoint laps, session summary) as a
+  standards-compliant binary FIT file.  The Export FIT button in the
+  companion app saves the file to Downloads (or the app-specific external
+  directory on older Android versions).

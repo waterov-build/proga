@@ -277,17 +277,41 @@ class EnduroPlusModel {
     var _results = [];            // Array of CheckpointResult
     var _nextCpIdx = 0;           // Index into _checkpoints
     var _checkpoints = [];        // Array of Checkpoint
+    var _parTimes = [];           // Array of Number — par seconds per checkpoint
     var _lastLat = null;
     var _lastLon = null;
     var _lastSpeedMs = 0.0;       // m/s
     var _gpsAccuracy = 0;         // Position.QUALITY_* constant
     var _timer = null;
     var _trackRecorder = null;    // TrackRecorder instance
+    var _courseIdx = 0;           // Index of the loaded FIT course
 
-    // Demo checkpoint list — replace with course-specific data loaded
-    // from FIT course files or pushed via BLE from the companion app.
+    // Initialise the model.
+    // Attempts to load checkpoints from the first available FIT course file.
+    // Falls back to a built-in demo route if no course is found on the device.
     function initialize() {
         _trackRecorder = new TrackRecorder();
+        _loadCourseOrDefault(0);
+    }
+
+    // Loads checkpoints and par times from the FIT course at the given index.
+    // Falls back to built-in demo checkpoints when no course is available.
+    function _loadCourseOrDefault(index) {
+        var loader = new CourseLoader();
+        if (loader.getCourseCount() > index) {
+            var result = loader.loadCourse(index);
+            var cps = result[:checkpoints];
+            if (cps.size() > 0) {
+                _checkpoints = cps;
+                _parTimes    = result[:parTimes];
+                _courseIdx   = index;
+                Sys.println("Model: loaded FIT course[" + index + "] with "
+                            + _checkpoints.size() + " checkpoints");
+                return;
+            }
+        }
+        // Fallback: built-in demo route (Moscow region sample coordinates)
+        Sys.println("Model: no FIT course available — using built-in demo route");
         _checkpoints = [
             new Checkpoint(55.751244, 37.618423, "CP1-Start"),
             new Checkpoint(55.752100, 37.619800, "CP2-Rock"),
@@ -295,6 +319,10 @@ class EnduroPlusModel {
             new Checkpoint(55.754800, 37.622500, "CP4-River"),
             new Checkpoint(55.756000, 37.624000, "CP5-Finish"),
         ];
+        // Calculate par times for the demo route using the same distance
+        // formula so the scoring behaves identically to FIT-loaded courses.
+        var loader2 = new CourseLoader();
+        _parTimes = loader2._calcParTimes(_checkpoints);
     }
 
     // Begin position tracking and start the race timer.
@@ -388,18 +416,19 @@ class EnduroPlusModel {
     // Award score for reaching a checkpoint and advance to the next one.
     function _reachCheckpoint(cp) {
         var now = Time.now();
-        var elapsed = (now.value() - _startMoment.value()).toFloat();
-        // Par time placeholder: 60 s × checkpoint index.
-        // TODO: replace with course-specific par times loaded from the
-        // companion app or a FIT course file so scoring reflects real
-        // terrain difficulty and checkpoint distances.
-        var parSec = 60 * (_nextCpIdx + 1);
-        var bonus = calcTimeBonus(parSec, elapsed);
+        var elapsedSec = (now.value() - _startMoment.value()).toFloat();
+        // Use the pre-calculated par time for this segment.  The par time is
+        // derived from the Haversine distance between consecutive checkpoints
+        // divided by the assumed average enduro speed (ENDURO_AVG_SPEED_KMH).
+        var parTimeSec = (_parTimes.size() > _nextCpIdx)
+                         ? _parTimes[_nextCpIdx]
+                         : FALLBACK_PAR_SEC;
+        var bonus = calcTimeBonus(parTimeSec, elapsedSec);
         var score = BASE_CHECKPOINT_SCORE + bonus;
         if (score < 0) { score = 0; }
         _totalScore += score;
-        _results.add(new CheckpointResult(cp, elapsed.toNumber(), score));
-        Sys.println("Reached: " + cp.name + "  elapsed=" + elapsed + "s  score=" + score);
+        _results.add(new CheckpointResult(cp, elapsedSec.toNumber(), score));
+        Sys.println("Reached: " + cp.name + "  elapsed=" + elapsedSec + "s  par=" + parTimeSec + "s  score=" + score);
         _nextCpIdx++;
     }
 
@@ -446,6 +475,7 @@ class EnduroPlusModel {
     // Parses a checkpoint list pushed from the companion app over BLE.
     // Expected format (one checkpoint per line): "name,lat,lon"
     // Example: "CP1-Start,55.751244,37.618423\nCP2-Rock,55.752100,37.619800"
+    // Par times are recalculated from inter-checkpoint distances after loading.
     function loadCheckpointsFromString(text) {
         if (text == null || text.length() == 0) {
             return;
@@ -465,7 +495,9 @@ class EnduroPlusModel {
         }
         if (newList.size() > 0) {
             _checkpoints = newList;
-            Sys.println("Loaded " + _checkpoints.size() + " checkpoints via BLE");
+            var loader = new CourseLoader();
+            _parTimes = loader._calcParTimes(_checkpoints);
+            Sys.println("Loaded " + _checkpoints.size() + " checkpoints via BLE; par times recalculated");
         }
     }
 

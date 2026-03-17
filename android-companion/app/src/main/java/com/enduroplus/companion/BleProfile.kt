@@ -72,3 +72,24 @@ fun encodeCheckpointList(checkpoints: List<Triple<String, Double, Double>>): Str
     checkpoints.joinToString("\n") { (name, lat, lon) ->
         "$name,%.6f,%.6f".format(lat, lon)
     }
+
+/**
+ * Parses the GPS track payload produced by TrackRecorder.serialize().
+ * Format: "track:<total_count>|lat,lon,spd,t|…"
+ *
+ * Returns a list of (lat, lon) pairs representing the track polyline.
+ * Only the points embedded in the payload (up to MAX_BLE_POINTS on the
+ * watch side) are returned; the total_count field is informational only.
+ */
+fun parseTrack(payload: String): List<Pair<Double, Double>> {
+    if (!payload.startsWith("track:")) return emptyList()
+    val segments = payload.split("|")
+    return segments.drop(1).mapNotNull { seg ->
+        val fields = seg.split(",")
+        if (fields.size >= 2) {
+            val lat = fields[0].toDoubleOrNull() ?: return@mapNotNull null
+            val lon = fields[1].toDoubleOrNull() ?: return@mapNotNull null
+            Pair(lat, lon)
+        } else null
+    }
+}
