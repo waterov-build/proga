@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ENDURO PLUS</string>
+    <string name="scan">🔍 Scan for Watches</string>
+    <string name="scanning">Scanning…</string>
+    <string name="refresh">↻ Refresh</string>
+    <string name="leaderboard">Leaderboard</string>
+    <string name="no_devices">Watches found: 0</string>
+    <string name="no_results_yet">No results yet.\nScan for watches and start a race!</string>
+</resources>
