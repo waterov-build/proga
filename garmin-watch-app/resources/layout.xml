@@ -1,0 +1,58 @@
+<resources>
+  <!-- String resources -->
+  <strings>
+    <string id="AppName">ENDURO PLUS</string>
+    <string id="LabelScore">SCORE</string>
+    <string id="LabelTimer">TIME</string>
+    <string id="LabelNext">NEXT CP</string>
+    <string id="StatusNotStarted">NOT STARTED</string>
+    <string id="StatusFinished">FINISHED!</string>
+  </strings>
+
+  <!--
+    Main HUD layout.
+    Connect IQ WatchUi.Label elements are declared here for tooling
+    reference.  Runtime rendering uses dc.drawText calls in
+    EnduroPlusView.onUpdate so the labels automatically adapt to any
+    watch face resolution.
+    Font constants map to Graphics.FONT_LARGE / FONT_MEDIUM / FONT_SMALL.
+    Color values are standard HTML hex codes; Graphics.COLOR_WHITE = #FFFFFF,
+    Graphics.COLOR_YELLOW = #FFFF00, Graphics.COLOR_GREEN = #00FF00.
+  -->
+  <layouts>
+    <layout id="MainLayout">
+      <!-- Timer (top-centre): white, large font -->
+      <label
+        id="timer_label"
+        x="center"
+        y="25%"
+        width="fill"
+        height="wrap"
+        font="FONT_LARGE"
+        justification="center"
+        color="#FFFFFF" />
+
+      <!-- Score (middle-centre): yellow, medium font -->
+      <label
+        id="score_label"
+        x="center"
+        y="50%"
+        width="fill"
+        height="wrap"
+        font="FONT_MEDIUM"
+        justification="center"
+        color="#FFFF00" />
+
+      <!-- Status / next checkpoint (bottom-centre): green, small font -->
+      <label
+        id="status_label"
+        x="center"
+        y="75%"
+        width="fill"
+        height="wrap"
+        font="FONT_SMALL"
+        justification="center"
+        color="#00FF00" />
+    </layout>
+  </layouts>
+</resources>

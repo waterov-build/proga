@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Circular badge background for the rank number in the leaderboard row -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <stroke
+        android:width="2dp"
+        android:color="@color/enduro_orange" />
+    <solid android:color="@color/surface_dark" />
+</shape>

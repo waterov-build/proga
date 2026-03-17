@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".MainActivity">
+
+    <!-- Title bar -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/enduro_orange"
+        android:paddingBottom="8dp" />
+
+    <!-- Scan / Refresh controls -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="12dp">
+
+        <Button
+            android:id="@+id/scanButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/scan" />
+
+        <Button
+            android:id="@+id/refreshButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="@string/refresh" />
+    </LinearLayout>
+
+    <!-- Device count indicator -->
+    <TextView
+        android:id="@+id/deviceCountLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/no_devices"
+        android:textSize="13sp"
+        android:textColor="@android:color/darker_gray"
+        android:paddingBottom="8dp" />
+
+    <!-- Leaderboard header -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/leaderboard"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:paddingBottom="4dp" />
+
+    <!-- Empty state -->
+    <TextView
+        android:id="@+id/emptyLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/no_results_yet"
+        android:textColor="@android:color/darker_gray"
+        android:visibility="visible"
+        android:paddingTop="24dp"
+        android:gravity="center" />
+
+    <!-- Leaderboard list -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/leaderboardRecycler"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        tools:listitem="@layout/item_participant" />
+
+</LinearLayout>
