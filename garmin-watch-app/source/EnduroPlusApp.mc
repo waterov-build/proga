@@ -458,7 +458,7 @@ class EnduroPlusModel {
                 var name = parts[0].trim();
                 var lat  = parts[1].trim().toFloat();
                 var lon  = parts[2].trim().toFloat();
-                if (name.length() > 0 && lat != 0.0 && lon != 0.0) {
+                if (name.length() > 0 && lat >= -90.0 && lat <= 90.0 && lon >= -180.0 && lon <= 180.0) {
                     newList.add(new Checkpoint(lat, lon, name));
                 }
             }

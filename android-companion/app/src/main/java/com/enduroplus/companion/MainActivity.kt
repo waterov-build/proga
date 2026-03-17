@@ -44,6 +44,8 @@ class MainActivity : AppCompatActivity() {
         // button re-enables after scanning has already stopped.
         private const val SCAN_BUTTON_REENABLE_MS = BleManager.SCAN_TIMEOUT_MS + 1_000L
     }
+
+    private val requiredPermissions: Array<String>
         get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             arrayOf(
                 Manifest.permission.BLUETOOTH_SCAN,
