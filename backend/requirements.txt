@@ -6,8 +6,8 @@ asyncpg==0.29.0
 pydantic==2.7.1
 pydantic-settings==2.2.1
 passlib[bcrypt]==1.7.4
-python-jose[cryptography]==3.3.0
-python-multipart==0.0.9
+python-jose[cryptography]==3.4.0
+python-multipart==0.0.22
 fitparse==1.2.0
 redis==5.0.4
 celery==5.4.0
