@@ -1,0 +1,18 @@
+project.manifest = manifest.xml
+
+# Source files
+base.sourcePath = source
+base.resourcePath = resources
+
+# Build targets
+enduro.sourcePath = $(base.sourcePath)
+enduro.resourcePath = $(base.resourcePath)
+enduro.targets = enduro;enduro2
+
+fenix7.sourcePath = $(base.sourcePath)
+fenix7.resourcePath = $(base.resourcePath)
+fenix7.targets = fenix7;fenix7s;fenix7x
+
+fr9xx.sourcePath = $(base.sourcePath)
+fr9xx.resourcePath = $(base.resourcePath)
+fr9xx.targets = fr945;fr955;fr965
