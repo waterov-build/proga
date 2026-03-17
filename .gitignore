@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+dist/
+*.egg-info/
+.pytest_cache/
+
+# Node
+node_modules/
+.next/
+build/
+.env.local
+
+# Android
+*.apk
+*.aab
+.gradle/
+local.properties
+android-companion/.idea/
+
+# Garmin / Connect IQ
+*.prg
+*.iq
+bin/
+
+# Env
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Docker
+*.log
