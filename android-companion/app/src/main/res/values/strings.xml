@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ENDURO PLUS</string>
+    <string name="scan">🔍 Scan for Watches</string>
+    <string name="scanning">Scanning…</string>
+    <string name="refresh">↻ Refresh</string>
+    <string name="leaderboard">Leaderboard</string>
+    <string name="no_devices">Watches found: 0</string>
+    <string name="no_results_yet">No results yet.\nScan for watches and start a race!</string>
+    <!-- Course editor -->
+    <string name="manage_course">📋 Manage Course</string>
+    <string name="course_editor_title">Course Editor</string>
+    <string name="course_name_hint">Course name</string>
+    <string name="checkpoints_label">Checkpoints</string>
+    <string name="no_checkpoints">No checkpoints yet.\nTap + to add one.</string>
+    <string name="add_checkpoint">+ Checkpoint</string>
+    <string name="send_to_watches">📡 Send</string>
+    <string name="save">💾 Save</string>
+    <string name="cp_name_hint">Name (e.g. CP1-Start)</string>
+    <string name="cp_lat_hint">Latitude (°)</string>
+    <string name="cp_lon_hint">Longitude (°)</string>
+    <string name="cp_par_hint">Par time (seconds)</string>
+    <string name="edit_checkpoint">Edit</string>
+    <string name="delete_checkpoint">Delete</string>
+    <string name="add_checkpoint_title">Add checkpoint</string>
+    <string name="edit_checkpoint_title">Edit checkpoint</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="course_saved">Course saved</string>
+    <string name="sent_to_watches">Sent %1$d checkpoint(s) to connected watches</string>
+    <string name="no_watches_connected">No watches connected — scan first</string>
+    <string name="invalid_coordinates">Invalid coordinates</string>
+    <!-- Map view -->
+    <string name="open_map">🗺️ Map</string>
+    <string name="map_title">Track Map</string>
+    <string name="no_course_for_map">No course saved yet — add checkpoints first</string>
+    <!-- Session export -->
+    <string name="export_session">📤 Export</string>
+    <string name="export_session_subject">ENDURO PLUS session results</string>
+    <string name="no_results_to_export">No results to export yet</string>
+</resources>

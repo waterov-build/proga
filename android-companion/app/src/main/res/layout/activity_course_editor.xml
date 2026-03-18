@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  activity_course_editor.xml
+  Course editor screen layout:
+    ┌──────────────────────────────────────────────────────┐
+    │  [Course name field]                                 │
+    │  ─────────────────────────────────────────────────── │
+    │  Checkpoints  (RecyclerView, scrollable)             │
+    │                                                      │
+    │  ─────────────────────────────────────────────────── │
+    │  [+ Add checkpoint]  [Send to watches]  [Save]       │
+    └──────────────────────────────────────────────────────┘
+-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@color/background_dark">
+
+    <!-- Course name -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/courseNameLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/course_name_hint">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/courseNameEdit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:maxLines="1"
+            android:textColor="@color/white"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/checkpoints_label"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:paddingTop="12dp"
+        android:paddingBottom="4dp"/>
+
+    <!-- Checkpoint list -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/checkpointsRecycler"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp"/>
+
+    <!-- Empty state -->
+    <TextView
+        android:id="@+id/noCheckpointsLabel"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="@string/no_checkpoints"
+        android:textColor="#888888"
+        android:visibility="gone"/>
+
+    <!-- Action buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="8dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/addCheckpointButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:text="@string/add_checkpoint"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sendToWatchesButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:text="@string/send_to_watches"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/saveCourseButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:text="@string/save"/>
+
+    </LinearLayout>
+
+</LinearLayout>
