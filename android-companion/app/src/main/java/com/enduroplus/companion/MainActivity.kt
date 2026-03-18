@@ -24,6 +24,11 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.enduroplus.companion.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Main screen — shows a live leaderboard of participants, a scan button,
@@ -89,6 +94,10 @@ class MainActivity : AppCompatActivity() {
         binding.manageCourseButton.setOnClickListener {
             startActivity(Intent(this, CourseEditorActivity::class.java))
         }
+        binding.openMapButton.setOnClickListener {
+            startActivity(Intent(this, MapActivity::class.java))
+        }
+        binding.exportButton.setOnClickListener { exportSession() }
 
         // Observe leaderboard updates
         lifecycleScope.launch {
@@ -143,6 +152,79 @@ class MainActivity : AppCompatActivity() {
 
     private fun connectToWatch(device: BluetoothDevice) {
         bleManager.connect(device)
+    }
+
+    // ---- Session export ----
+
+    /**
+     * Serialises the current leaderboard and the active course to a JSON string,
+     * then opens the system share sheet so the user can send it via any app.
+     *
+     * JSON structure:
+     * ```
+     * {
+     *   "exportedAt": "2026-03-18T07:10:40Z",
+     *   "course": { "name": "...", "checkpoints": [...] },
+     *   "leaderboard": [
+     *     { "rank": 1, "participant": "...", "totalScore": 350,
+     *       "checkpoints": [{ "name": "CP1", "elapsedSec": 115, "score": 105 }, …] },
+     *     …
+     *   ]
+     * }
+     * ```
+     */
+    private fun exportSession() {
+        val results = viewModel.leaderboard.value
+        if (results.isEmpty()) {
+            Toast.makeText(this, R.string.no_results_to_export, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val course = CourseRepository(applicationContext).loadAll().firstOrNull()
+        val courseJson = course?.let { c ->
+            JSONObject().apply {
+                put("name", c.name)
+                put("checkpoints", JSONArray(c.checkpoints.map { cp ->
+                    JSONObject().apply {
+                        put("name",   cp.name)
+                        put("lat",    cp.lat)
+                        put("lon",    cp.lon)
+                        put("parSec", cp.parSec)
+                    }
+                }))
+            }
+        }
+
+        val leaderboardJson = JSONArray(results.mapIndexed { index, r ->
+            JSONObject().apply {
+                put("rank",        index + 1)
+                put("participant", r.deviceName)
+                put("totalScore",  r.totalScore)
+                put("checkpoints", JSONArray(r.checkpoints.map { cp ->
+                    JSONObject().apply {
+                        put("name",       cp.name)
+                        put("elapsedSec", cp.elapsedSec)
+                        put("score",      cp.score)
+                    }
+                }))
+            }
+        })
+
+        val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
+            .format(Date())
+        val root = JSONObject().apply {
+            put("exportedAt", timestamp)
+            if (courseJson != null) put("course", courseJson)
+            put("leaderboard", leaderboardJson)
+        }
+
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.export_session_subject))
+            putExtra(Intent.EXTRA_TEXT, root.toString(2))
+        }
+        startActivity(Intent.createChooser(shareIntent,
+            getString(R.string.export_session_subject)))
     }
 }
 

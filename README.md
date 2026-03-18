@@ -130,5 +130,5 @@ cd android-companion
 
 ## TODO / next steps
 - Replace hardcoded checkpoint coordinates with a FIT course file loader.
-- Add map view to the companion (render track polylines per participant).
-- Add FIT file export from companion to share full session data.
+- ~~Add map view to the companion (render track polylines per participant).~~ ✅ Done — `MapActivity` (OSMDroid).
+- ~~Add FIT file export from companion to share full session data.~~ ✅ Done — JSON session export via Android share sheet.

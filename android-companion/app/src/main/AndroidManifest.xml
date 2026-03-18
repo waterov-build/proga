@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <!-- Needed for BLE scanning on Android 10 and below -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- OSMDroid: download map tiles -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <uses-feature android:name="android.hardware.bluetooth_le"
                   android:required="true" />
@@ -34,6 +36,12 @@
 
         <activity
             android:name=".CourseEditorActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".MapActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:parentActivityName=".MainActivity" />

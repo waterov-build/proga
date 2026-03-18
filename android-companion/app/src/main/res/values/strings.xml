@@ -30,4 +30,12 @@
     <string name="sent_to_watches">Sent %1$d checkpoint(s) to connected watches</string>
     <string name="no_watches_connected">No watches connected — scan first</string>
     <string name="invalid_coordinates">Invalid coordinates</string>
+    <!-- Map view -->
+    <string name="open_map">🗺️ Map</string>
+    <string name="map_title">Track Map</string>
+    <string name="no_course_for_map">No course saved yet — add checkpoints first</string>
+    <!-- Session export -->
+    <string name="export_session">📤 Export</string>
+    <string name="export_session_subject">ENDURO PLUS session results</string>
+    <string name="no_results_to_export">No results to export yet</string>
 </resources>

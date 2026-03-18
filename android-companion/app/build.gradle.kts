@@ -36,4 +36,5 @@ dependencies {
     implementation(libs.lifecycle.livedata.ktx)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.recyclerview)
+    implementation(libs.osmdroid.android)
 }

@@ -88,3 +88,45 @@ fun encodeCheckpointList(checkpoints: List<CourseCheckpoint>): String =
     checkpoints.joinToString("\n") { cp ->
         "${cp.name},%.6f,%.6f,${cp.parSec}".format(cp.lat, cp.lon)
     }
+
+/**
+ * A single GPS sample from the watch's [TrackRecorder] ring-buffer.
+ *
+ * @param lat       Latitude in degrees WGS-84
+ * @param lon       Longitude in degrees WGS-84
+ * @param speedMs   Speed in m/s
+ * @param elapsedSec Seconds since race start
+ */
+data class TrackPoint(
+    val lat: Double,
+    val lon: Double,
+    val speedMs: Double,
+    val elapsedSec: Int,
+)
+
+/**
+ * Parses the CHAR_TRACK payload produced by [TrackRecorder.serialize].
+ *
+ * Format: `"track:<count>|<lat>,<lon>,<spd>,<t>|…"`
+ * - lat/lon are decimal degrees (6 d.p.)
+ * - spd is m/s (1 d.p.)
+ * - t is elapsed seconds since race start
+ *
+ * Returns an empty list if the payload is malformed.
+ */
+fun parseTrack(payload: String): List<TrackPoint> {
+    if (!payload.startsWith("track:")) return emptyList()
+    return payload.split("|")
+        .drop(1) // skip "track:<count>" header
+        .mapNotNull { seg ->
+            val f = seg.split(",")
+            if (f.size >= 4) {
+                TrackPoint(
+                    lat        = f[0].toDoubleOrNull() ?: return@mapNotNull null,
+                    lon        = f[1].toDoubleOrNull() ?: return@mapNotNull null,
+                    speedMs    = f[2].toDoubleOrNull() ?: return@mapNotNull null,
+                    elapsedSec = f[3].toIntOrNull()    ?: return@mapNotNull null,
+                )
+            } else null
+        }
+}
