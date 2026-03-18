@@ -3,9 +3,9 @@ package com.example.enduro
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.enduro.garmin.GarminBridge
 import com.example.enduro.sync.SyncRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
         syncRepo    = SyncRepository(this)
         garminBridge = GarminBridge(this) { payload ->
             Log.d(tag, "Activity received from Garmin: $payload")
-            CoroutineScope(Dispatchers.IO).launch {
+            lifecycleScope.launch(Dispatchers.IO) {
                 syncRepo.uploadActivity(payload)
             }
         }
@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         garminBridge.connect()
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             val segments = syncRepo.fetchSegments()
             garminBridge.pushSegments(segments)
         }

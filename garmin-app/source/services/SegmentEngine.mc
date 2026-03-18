@@ -1,6 +1,7 @@
 import Toybox.Lang;
 import Toybox.Position;
 import Toybox.Math;
+import Toybox.Time;
 
 class SegmentEngine {
 

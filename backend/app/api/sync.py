@@ -8,7 +8,6 @@ from app.schemas import (
 )
 from app.api.auth import get_current_user
 from app.services.activity_ingest import ingest_activity
-import json
 
 router = APIRouter()
 

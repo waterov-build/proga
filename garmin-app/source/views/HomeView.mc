@@ -20,11 +20,19 @@ class HomeView extends WatchUi.View {
     function onUpdate(dc as Graphics.Dc) as Void {
         var engine = Application.getApp().getProperty("segmentEngine") as SegmentEngine;
         if (engine != null && engine.hasActiveSegment()) {
-            _statusLabel.setText(WatchUi.loadResource(Rez.Strings.Recording) as String);
-            _segmentLabel.setText(engine.getCurrentSegmentName());
+            if (_statusLabel != null) {
+                _statusLabel.setText(WatchUi.loadResource(Rez.Strings.Recording) as String);
+            }
+            if (_segmentLabel != null) {
+                _segmentLabel.setText(engine.getCurrentSegmentName());
+            }
         } else {
-            _statusLabel.setText(WatchUi.loadResource(Rez.Strings.Ready) as String);
-            _segmentLabel.setText("--");
+            if (_statusLabel != null) {
+                _statusLabel.setText(WatchUi.loadResource(Rez.Strings.Ready) as String);
+            }
+            if (_segmentLabel != null) {
+                _segmentLabel.setText("--");
+            }
         }
         View.onUpdate(dc);
     }

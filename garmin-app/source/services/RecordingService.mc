@@ -1,6 +1,7 @@
 import Toybox.Position;
 import Toybox.Sensor;
 import Toybox.Lang;
+import Toybox.Time;
 
 class RecordingService {
 
