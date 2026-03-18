@@ -1,0 +1,7 @@
+project.manifest = manifest.xml
+
+fenix.resourcePath = $(fenix.resourcePath);resources/layouts/fenix;resources/strings
+enduro.resourcePath = $(enduro.resourcePath);resources/layouts/enduro;resources/strings
+edge.resourcePath = $(edge.resourcePath);resources/layouts/edge;resources/strings
+
+base.sourcePath = source;source/views;source/services

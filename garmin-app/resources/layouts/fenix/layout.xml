@@ -1,0 +1,6 @@
+<layout id="HomeLayout">
+  <label id="titleLabel" x="center" y="40" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="@Strings.AppName"/>
+  <label id="statusLabel" x="center" y="80" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" text="@Strings.Ready"/>
+  <label id="segmentLabel" x="center" y="130" font="Graphics.FONT_LARGE" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_GREEN" text="--"/>
+  <label id="timerLabel" x="center" y="190" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" text="00:00"/>
+</layout>
