@@ -1,0 +1,95 @@
+package com.enduroplus.companion
+
+/**
+ * BLE GATT profile constants shared between the Android companion and the
+ * Garmin watch app.  UUID strings must match those in EnduroPlusApp.mc.
+ */
+object BleProfile {
+    /** Primary ENDURO PLUS service */
+    const val SERVICE_UUID    = "12340000-1234-1234-1234-123456789abc"
+    /** Read/Notify: serialised race results (score + checkpoint list) */
+    const val CHAR_SCORE      = "12340001-1234-1234-1234-123456789abc"
+    /** Read: GPS track polyline snapshot */
+    const val CHAR_TRACK      = "12340002-1234-1234-1234-123456789abc"
+    /** Write: push a new checkpoint list to the watch */
+    const val CHAR_CP_LIST    = "12340003-1234-1234-1234-123456789abc"
+    /** Read/Notify: live status string */
+    const val CHAR_STATUS     = "12340004-1234-1234-1234-123456789abc"
+    /** Standard CCCD (Client Characteristic Configuration Descriptor) */
+    const val CCCD_UUID       = "00002902-0000-1000-8000-00805f9b34fb"
+}
+
+/**
+ * Decoded result from a single watch.
+ *
+ * @param deviceName  BLE device name (e.g. "ENDURO PLUS – Alice")
+ * @param totalScore  Total points accumulated
+ * @param checkpoints List of [CheckpointEntry] in order of completion
+ */
+data class ParticipantResult(
+    val deviceName: String,
+    val totalScore: Int,
+    val checkpoints: List<CheckpointEntry>,
+)
+
+/**
+ * A single completed checkpoint record decoded from the BLE payload.
+ */
+data class CheckpointEntry(
+    val name: String,
+    val elapsedSec: Int,
+    val score: Int,
+)
+
+/**
+ * Parses the text payload produced by EnduroPlusModel.serializeResults().
+ * Format: "score=NNN;cp1=name,elapsed,score;cp2=…"
+ */
+fun parseResults(deviceName: String, payload: String): ParticipantResult {
+    val parts = payload.split(";")
+    val totalScore = parts.firstOrNull { it.startsWith("score=") }
+        ?.removePrefix("score=")?.toIntOrNull() ?: 0
+    val checkpoints = parts
+        .filter { it.matches(Regex("cp\\d+=.*")) }
+        .mapNotNull { entry ->
+            val fields = entry.substringAfter("=").split(",")
+            if (fields.size >= 3) {
+                CheckpointEntry(
+                    name       = fields[0],
+                    elapsedSec = fields[1].toIntOrNull() ?: 0,
+                    score      = fields[2].toIntOrNull() ?: 0,
+                )
+            } else null
+        }
+    return ParticipantResult(deviceName, totalScore, checkpoints)
+}
+
+/**
+ * Formats a checkpoint list to the format expected by the watch.
+ * Format (one line per checkpoint): "name,lat,lon\n…"
+ */
+fun encodeCheckpointList(checkpoints: List<Triple<String, Double, Double>>): String =
+    checkpoints.joinToString("\n") { (name, lat, lon) ->
+        "$name,%.6f,%.6f".format(lat, lon)
+    }
+
+/**
+ * Parses the GPS track payload produced by TrackRecorder.serialize().
+ * Format: "track:<total_count>|lat,lon,spd,t|…"
+ *
+ * Returns a list of (lat, lon) pairs representing the track polyline.
+ * Only the points embedded in the payload (up to MAX_BLE_POINTS on the
+ * watch side) are returned; the total_count field is informational only.
+ */
+fun parseTrack(payload: String): List<Pair<Double, Double>> {
+    if (!payload.startsWith("track:")) return emptyList()
+    val segments = payload.split("|")
+    return segments.drop(1).mapNotNull { seg ->
+        val fields = seg.split(",")
+        if (fields.size >= 2) {
+            val lat = fields[0].toDoubleOrNull() ?: return@mapNotNull null
+            val lon = fields[1].toDoubleOrNull() ?: return@mapNotNull null
+            Pair(lat, lon)
+        } else null
+    }
+}

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.garmin.com/xml/connectiq"
+          version="3">
+    <application id="a3f9b2c1-d845-4e67-8a12-0b5e7f3c9d21"
+                 launcherIcon="@Drawables.launcher_icon"
+                 minSdkVersion="3.0.0"
+                 name="@Strings.AppName"
+                 targetSdkVersion="4.2.0"
+                 type="watch-app"
+                 version="1.0.0">
+        <products>
+            <product id="enduro"/>
+            <product id="enduro2"/>
+            <product id="fenix7"/>
+            <product id="fenix7s"/>
+            <product id="fenix7x"/>
+            <product id="fr945"/>
+            <product id="fr955"/>
+            <product id="fr965"/>
+        </products>
+        <permissions>
+            <uses-permission id="Positioning"/>
+            <uses-permission id="Sensor"/>
+            <uses-permission id="BluetoothLowEnergy"/>
+            <uses-permission id="FitRecording"/>
+        </permissions>
+        <languages>
+            <language id="eng"/>
+            <language id="rus"/>
+        </languages>
+        <iq:buildTarget id="enduro-release" excludes="test" jungle="monkey.jungle">
+            <iq:products>
+                <iq:product id="enduro"/>
+                <iq:product id="enduro2"/>
+                <iq:product id="fenix7"/>
+            </iq:products>
+        </iq:buildTarget>
+    </application>
+</manifest>
