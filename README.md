@@ -137,3 +137,20 @@ cd android-companion
   standards-compliant binary FIT file.  The Export FIT button in the
   companion app saves the file to Downloads (or the app-specific external
   directory on older Android versions).
+
+- **Increased BLE request throughput**:
+  - *GATT operation queue* (`BleManager`): all GATT reads, writes, and
+    descriptor writes are now serialised per-device via an in-memory queue.
+    Each operation is dispatched only after the previous one completes,
+    preventing silent drops (GATT error 133) when multiple devices are
+    connected or when score and track reads are issued back-to-back.
+  - *MTU negotiation*: the companion now requests a 512-byte MTU immediately
+    after connecting.  This allows larger GATT payloads per read, so more
+    GPS track data can be transferred in a single request.
+  - *Larger track snapshot*: `MAX_BLE_POINTS` in `TrackRecorder.mc` raised
+    from 50 to 200, taking full advantage of the larger MTU and providing a
+    richer track history per BLE read.
+  - *Periodic auto-refresh* (`ResultsViewModel`): scores and GPS tracks are
+    now polled automatically every 5 seconds (`AUTO_REFRESH_INTERVAL_MS`)
+    in addition to BLE push notifications, ensuring the leaderboard and map
+    stay current without manual button presses.

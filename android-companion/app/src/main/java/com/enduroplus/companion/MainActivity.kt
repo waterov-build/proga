@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.enduroplus.companion.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.awaitCancellation
 import java.io.File
 import java.io.FileOutputStream
 
@@ -108,10 +109,15 @@ class MainActivity : AppCompatActivity() {
                     // Map keys are device addresses; rename to device names
                     // using the current leaderboard for display purposes.
                     val namedTracks = tracksMap.entries.associate { (addr, pts) ->
-                        val name = viewModel.leaderboard.value
-                            .firstOrNull { it.deviceName.isNotEmpty() }
-                            ?.deviceName ?: addr
-                        name to pts
+                        // Find the watch device with this address and look up
+                        // its name from the leaderboard.  Fall back to addr.
+                        val deviceName = bleManager.devicesFlow.value
+                            .firstOrNull { it.address == addr }
+                            ?.name
+                        val displayName = viewModel.leaderboard.value
+                            .firstOrNull { it.deviceName == deviceName }
+                            ?.deviceName ?: deviceName ?: addr
+                        displayName to pts
                     }
                     binding.trackMapView.setTracks(namedTracks)
                 }
@@ -127,6 +133,22 @@ class MainActivity : AppCompatActivity() {
                     devices.forEach { device ->
                         connectToWatch(device)
                     }
+                }
+            }
+        }
+
+        // Periodic auto-refresh — runs only while the Activity is STARTED
+        // (i.e. visible), pausing automatically in the background to save
+        // battery.  The ViewModel's onCleared() will cancel any residual job.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.startAutoRefresh()
+                // The coroutine is cancelled when the lifecycle drops below
+                // STARTED; the finally block ensures the loop is stopped.
+                try {
+                    awaitCancellation()
+                } finally {
+                    viewModel.stopAutoRefresh()
                 }
             }
         }

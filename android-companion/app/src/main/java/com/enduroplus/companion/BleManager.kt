@@ -9,6 +9,7 @@ import android.os.Looper
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.util.LinkedList
 import java.util.UUID
 
 private const val TAG = "BleManager"
@@ -24,6 +25,11 @@ private const val TAG = "BleManager"
  *   mgr.readScore(device)         // reads score characteristic → resultsFlow
  *   mgr.sendCheckpoints(device, list)  // writes checkpoint list to watch
  *   mgr.stopScan()
+ *
+ * GATT operations are serialised per-device via an operation queue: each new
+ * read/write is enqueued and the next operation is dispatched only after the
+ * current one completes (or fails).  This prevents "too many requests" errors
+ * that occur when GATT calls are made before a previous one has finished.
  */
 @SuppressLint("MissingPermission")  // Permissions checked by the calling Activity
 class BleManager(private val context: Context) {
@@ -31,6 +37,13 @@ class BleManager(private val context: Context) {
     companion object {
         /** How long to scan before auto-stopping (milliseconds). */
         const val SCAN_TIMEOUT_MS = 30_000L
+
+        /**
+         * Requested GATT MTU (bytes).  Larger MTU means more data per
+         * characteristic read, allowing more track points per request.
+         * 512 is the maximum permitted by the Bluetooth spec.
+         */
+        const val REQUESTED_MTU = 512
     }
 
     // Discovered (not yet connected) Garmin watch devices
@@ -47,6 +60,17 @@ class BleManager(private val context: Context) {
 
     // Active GATT connections keyed by device address
     private val _gatts = mutableMapOf<String, BluetoothGatt>()
+
+    /**
+     * Per-device GATT operation queue.
+     *
+     * GATT is single-threaded per connection: only one operation (read, write,
+     * descriptor write, MTU request) may be in-flight at a time.  Enqueueing
+     * them here lets callers issue back-to-back requests without risk of
+     * silently dropping operations or triggering a GATT_ERROR 133.
+     */
+    private val _queues = mutableMapOf<String, LinkedList<() -> Unit>>()
+    private val _operationInProgress = mutableMapOf<String, Boolean>()
 
     private val bluetoothAdapter: BluetoothAdapter? =
         (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
@@ -95,6 +119,8 @@ class BleManager(private val context: Context) {
     fun connect(device: BluetoothDevice) {
         val gatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
         _gatts[device.address] = gatt
+        _queues[device.address] = LinkedList()
+        _operationInProgress[device.address] = false
     }
 
     fun disconnect(device: BluetoothDevice) {
@@ -105,15 +131,25 @@ class BleManager(private val context: Context) {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
-                    Log.d(TAG, "Connected to ${gatt.device.address}; discovering services…")
-                    gatt.discoverServices()
+                    Log.d(TAG, "Connected to ${gatt.device.address}; requesting MTU $REQUESTED_MTU…")
+                    // Request a larger MTU first; service discovery follows in onMtuChanged.
+                    enqueue(gatt.device.address) { gatt.requestMtu(REQUESTED_MTU) }
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     Log.d(TAG, "Disconnected from ${gatt.device.address}")
                     _gatts.remove(gatt.device.address)
+                    _queues.remove(gatt.device.address)
+                    _operationInProgress.remove(gatt.device.address)
                     gatt.close()
                 }
             }
+        }
+
+        override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+            Log.d(TAG, "MTU for ${gatt.device.address} → $mtu bytes (status=$status)")
+            operationCompleted(gatt.device.address)
+            // Discover services regardless of whether the requested MTU was granted
+            gatt.discoverServices()
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
@@ -130,6 +166,7 @@ class BleManager(private val context: Context) {
             value: ByteArray,
             status: Int,
         ) {
+            operationCompleted(gatt.device.address)
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 handleCharacteristicData(gatt.device, characteristic.uuid, value)
             }
@@ -151,6 +188,28 @@ class BleManager(private val context: Context) {
         ) {
             handleCharacteristicData(gatt.device, characteristic.uuid, value)
         }
+
+        override fun onCharacteristicWrite(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            status: Int,
+        ) {
+            operationCompleted(gatt.device.address)
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                Log.e(TAG, "Write failed for ${characteristic.uuid}: status=$status")
+            }
+        }
+
+        override fun onDescriptorWrite(
+            gatt: BluetoothGatt,
+            descriptor: BluetoothGattDescriptor,
+            status: Int,
+        ) {
+            operationCompleted(gatt.device.address)
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                Log.e(TAG, "Descriptor write failed: status=$status")
+            }
+        }
     }
 
     // ---------- Read / write ----------
@@ -160,7 +219,7 @@ class BleManager(private val context: Context) {
         val gatt = _gatts[device.address] ?: return
         val char = gatt.getService(UUID.fromString(BleProfile.SERVICE_UUID))
             ?.getCharacteristic(UUID.fromString(BleProfile.CHAR_SCORE)) ?: return
-        gatt.readCharacteristic(char)
+        enqueue(device.address) { gatt.readCharacteristic(char) }
     }
 
     /** Read the GPS track characteristic from a connected watch. */
@@ -168,7 +227,7 @@ class BleManager(private val context: Context) {
         val gatt = _gatts[device.address] ?: return
         val char = gatt.getService(UUID.fromString(BleProfile.SERVICE_UUID))
             ?.getCharacteristic(UUID.fromString(BleProfile.CHAR_TRACK)) ?: return
-        gatt.readCharacteristic(char)
+        enqueue(device.address) { gatt.readCharacteristic(char) }
     }
 
     /**
@@ -181,15 +240,55 @@ class BleManager(private val context: Context) {
         val char = gatt.getService(UUID.fromString(BleProfile.SERVICE_UUID))
             ?.getCharacteristic(UUID.fromString(BleProfile.CHAR_CP_LIST)) ?: return
         val payload = encodeCheckpointList(checkpoints).toByteArray(Charsets.UTF_8)
-        if (android.os.Build.VERSION.SDK_INT >= 33) {
-            gatt.writeCharacteristic(char, payload,
-                BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
-        } else {
-            @Suppress("DEPRECATION")
-            char.value = payload
-            @Suppress("DEPRECATION")
-            gatt.writeCharacteristic(char)
+        enqueue(device.address) {
+            if (android.os.Build.VERSION.SDK_INT >= 33) {
+                gatt.writeCharacteristic(char, payload,
+                    BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+            } else {
+                @Suppress("DEPRECATION")
+                char.value = payload
+                @Suppress("DEPRECATION")
+                gatt.writeCharacteristic(char)
+            }
         }
+    }
+
+    // ---------- GATT operation queue ----------
+
+    /**
+     * Enqueue a GATT operation for the given device.
+     *
+     * If no operation is currently in progress for this device, the operation
+     * is dispatched immediately on the main thread.  Otherwise it is placed in
+     * the queue and will be dispatched once the current operation completes.
+     */
+    private fun enqueue(address: String, op: () -> Unit) {
+        val queue = _queues[address] ?: return
+        queue.add(op)
+        if (_operationInProgress[address] != true) {
+            dispatchNext(address)
+        }
+    }
+
+    /** Dispatch the next queued operation for [address], if any. */
+    private fun dispatchNext(address: String) {
+        val queue = _queues[address] ?: return
+        val next = queue.poll()
+        if (next != null) {
+            _operationInProgress[address] = true
+            handler.post(next)
+        } else {
+            _operationInProgress[address] = false
+        }
+    }
+
+    /**
+     * Called from GATT callbacks when an operation finishes (success or error).
+     * Dispatches the next pending operation for the same device.
+     */
+    private fun operationCompleted(address: String) {
+        _operationInProgress[address] = false
+        dispatchNext(address)
     }
 
     // ---------- Helpers ----------
@@ -199,14 +298,16 @@ class BleManager(private val context: Context) {
             ?.getCharacteristic(UUID.fromString(charUuid)) ?: return
         gatt.setCharacteristicNotification(char, true)
         val cccd = char.getDescriptor(UUID.fromString(BleProfile.CCCD_UUID)) ?: return
-        if (android.os.Build.VERSION.SDK_INT >= 33) {
-            gatt.writeDescriptor(cccd,
-                BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
-        } else {
-            @Suppress("DEPRECATION")
-            cccd.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-            @Suppress("DEPRECATION")
-            gatt.writeDescriptor(cccd)
+        enqueue(gatt.device.address) {
+            if (android.os.Build.VERSION.SDK_INT >= 33) {
+                gatt.writeDescriptor(cccd,
+                    BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
+            } else {
+                @Suppress("DEPRECATION")
+                cccd.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                @Suppress("DEPRECATION")
+                gatt.writeDescriptor(cccd)
+            }
         }
     }
 

@@ -106,8 +106,11 @@ class TrackRecorder {
     // Format: "track:<count>|<lat>,<lon>,<spd>,<t>|..."
     // Coordinates are rounded to 6 decimal places (~0.1 m precision).
     // Only the most recent MAX_BLE_POINTS points are included to fit BLE MTU.
+    // With a 512-byte MTU negotiated by the companion app, the Android BLE
+    // stack transmits the full payload via GATT Long Read (multiple ATT
+    // packets).  Each point is ~30 bytes, so 200 points is ~6 KB total.
     function serialize() {
-        var MAX_BLE_POINTS = 50; // ~1500 bytes at 6dp / point
+        var MAX_BLE_POINTS = 200; // up to ~6 KB; delivered via BLE Long Read
         var start = _points.size() > MAX_BLE_POINTS
                     ? _points.size() - MAX_BLE_POINTS
                     : 0;
